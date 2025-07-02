@@ -30,6 +30,8 @@ set(SOURCES
         include/Light.h
         src/Material.cpp
         include/Material.h
+        src/Chunk.cpp
+        include/Chunk.h
 )
 
 # Executable target

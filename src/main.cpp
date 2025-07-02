@@ -19,6 +19,9 @@
 #include "Texture.h"
 #include "Light.h"
 #include "Material.h"
+#include "Chunk.h"
+
+
 
 std::vector<Mesh *> meshList;
 std::vector<glm::vec3> cubePositions;
@@ -27,27 +30,19 @@ std::vector<Shader> shaderList;
 Window mainWindow;
 Camera camera;
 
-Mesh* pyramid = nullptr;
-Mesh* lightBlock = nullptr;
-
-float cubeRotationAngle = 0.0f;
-std::vector<glm::vec3> cubeRotationAxes;
-
-
 GLfloat deltaTime = 0.0f;
 GLfloat lastTime = 0.0f;
 
 Texture brickTexture;
 Texture dirtTexture;
-Texture lightTexture;
 
 Material shinyMaterial;
 Material dullMaterial;
 
+Chunk* chunk = nullptr;
 
 Light mainLight;
 glm::vec3 lightPosition (-2.0f, 2.0f, -1.0f);
-int numOfCubes = 30;
 
 GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0, uniformAmbientIntensity = 0, uniformAmbientColour = 0, uniformDirection = 0, uniformDiffuseIntensity = 0, uniformCameraPosition = 0, uniformSpecularIntensity = 0, uniformShininess = 0;
 
@@ -121,150 +116,7 @@ void calcAverageNormals(unsigned int *indices, unsigned int indiceCount, GLfloat
 }
 
 void createObjects() {
-    GLfloat vertices[] = {
-            // mesh coords                      texture coords                 normals
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, -1.0f, 1.0f, 0.5f, 0.0f, 0.0f, 0.0f, 0.0f,
-            1.0f, -1.0f, 0.0f, 0.0625, 0.0f, 0.0f, 0.0f, 0.0f,
-            0.0f, 1.0f, 0.0f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f
-    };
-
-    GLfloat rectVerticies[] = {
-            // mesh coords                      texture coords                 normals
-            // front
-            -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 0
-            1.0f, -1.0f, -1.0f, 0.333333f, 0.0f, 0.0f, 0.0f, 0.0f, // 1
-            -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 2
-            1.0f, 1.0f, -1.0f, 0.333333f, 1.0f, 0.0f, 0.0f, 0.0f, // 3
-
-            //back
-            1.0f, -1.0f, 1.0f, 0.333333f, 0.0f, 0.0f, 0.0f, 0.0f, // 4
-            1.0f, 1.0f, 1.0f, 0.333333f, 1.0f, 0.0f, 0.0f, 0.0f, // 5
-            -1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 6
-            -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 7
-
-            // right
-            1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 8
-            1.0f, -1.0f, 1.0f, 0.333333f, 0.0f, 0.0f, 0.0f, 0.0f, // 9
-            1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 10
-            1.0f, 1.0f, 1.0f, 0.333333f, 1.0f, 0.0f, 0.0f, 0.0f, // 11
-
-            // left
-            -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 12
-            -1.0f, -1.0f, 1.0f, 0.333333f, 0.0f, 0.0f, 0.0f, 0.0f, // 13
-            -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 14
-            -1.0f, 1.0f, 1.0f, 0.333333f, 1.0f, 0.0f, 0.0f, 0.0f,  // 15
-
-            // bottom
-            -1.0f, -1.0f, -1.0f, 0.33333f, 0.0f, 0.0f, 0.0f, 0.0f, // 16
-            1.0f, -1.0f, -1.0f, 0.666666f, 0.0f, 0.0f, 0.0f, 0.0f, // 17
-            1.0f, -1.0f, 1.0f, 0.666666f, 1.0f, 0.0f, 0.0f, 0.0f, // 18
-            -1.0f, -1.0f, 1.0f, 0.333333, 1.0f, 0.0f, 0.0f, 0.0f, // 19
-
-            // top
-            -1.0f, 1.0f, -1.0f, 0.666666f, 0.0f, 0.0f, 0.0f, 0.0f, // 20
-                1.0f, 1.0f, -1.0f, 1.0, 0.0f, 0.0f, 0.0f, 0.0f, // 21
-            -1.0f, 1.0f, 1.0f, 0.666666f, 1.0f, 0.0f, 0.0f, 0.0f, // 22
-            1.0f, 1.0f, 1.0f, 1.0, 1.0f, 0.0f, 0.0f, 0.0f // 23
-    };
-
-    GLfloat lightBlockVerticies[] = {
-            // mesh coords                      texture coords                 normals
-            // front
-            -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 0
-            1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 1
-            -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 2
-            1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 3
-
-            //back
-            1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 4
-            1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 5
-            -1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 6
-            -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 7
-
-            // right
-            1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 8
-            1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 9
-            1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 10
-            1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 11
-
-            // left
-            -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 12
-            -1.0f, -1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 13
-            -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 14
-            -1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,  // 15
-
-            // bottom
-            -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 16
-            1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 17
-            1.0f, -1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 18
-            -1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 19
-
-            // top
-            -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 20
-            1.0f, 1.0f, -1.0f, 1.0, 0.0f, 0.0f, 0.0f, 0.0f, // 21
-            -1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 22
-            1.0f, 1.0f, 1.0f, 1.0, 1.0f, 0.0f, 0.0f, 0.0f // 23
-    };
-
-
-    unsigned int rectIndices[] = {
-            //face 1 front
-            0, 2, 1,
-            2, 1, 3,
-
-            //face 2 right
-            8, 9, 10,
-            10, 11, 9,
-
-            //face 3 up
-            20, 21, 22,
-            22, 23, 21,
-
-            //face 4 back
-            6, 4, 7,
-            5, 6, 4,
-
-            //face 5 left
-            12, 13, 14,
-            14, 15, 13,
-
-            //face 6 bottom
-            16, 17, 18,
-            18, 16, 19
-    };
-
-
-    unsigned int indices[] = {
-            0, 3, 1,
-            1, 3, 2,
-            2, 3, 0,
-            0, 1, 2
-    };
-
-
-    calcAverageNormals(indices, 12, vertices, 32, 8, 5);
-
-    pyramid = new Mesh();
-    pyramid->createMesh(vertices, indices, 32, 12);
-
-
-    lightBlock = new Mesh();
-    lightBlock->createMesh(lightBlockVerticies,rectIndices, 192, 36);
-    calcAverageNormals(rectIndices, 36, rectVerticies, 192, 8, 5);
-
-
-    for (int i = 0; i < numOfCubes; ++i) {
-        Mesh* obj = new Mesh();
-        obj->createMesh(rectVerticies, rectIndices, 192, 36);
-        meshList.push_back(obj);
-
-        glm::vec3 randomPos = getRandomNearbyPosition(3.0f);
-        cubePositions.push_back(randomPos); // store initial position
-
-        glm::vec3 randomAxis = glm::normalize(getRandomNearbyPosition(1.0f));
-        cubeRotationAxes.push_back(randomAxis);
-    }
+    chunk = new Chunk(16);
 }
 
 void createShader() {
@@ -273,55 +125,67 @@ void createShader() {
     shaderList.push_back(*shader1);
 }
 
+bool wireframe = false;
+
 int main() {
 
     mainWindow = Window();
     mainWindow.initalize();
     glEnable(GL_DEPTH_TEST);
 
-
     createObjects();
     createShader();
 
-    camera = Camera(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 1.0f, 0.05f);
+    camera = Camera(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 5.0f, 0.05f);
 
     brickTexture = Texture("Textures/brick.png");
     brickTexture.loadTexture();
     dirtTexture = Texture("Textures/DirtBlock.png");
     dirtTexture.loadTexture();
-    lightTexture = Texture("Textures/redstone-lamp.png");
-    lightTexture.loadTexture();
-
 
     shinyMaterial = Material(1.0f, 32.0f);
     dullMaterial = Material(0.4f, 4.0f);
 
-    mainLight = Light(1.0f, 1.0f, 1.0f, 0.5f, lightPosition.x, lightPosition.y, lightPosition.z, 1.0f);
+    mainLight = Light(1.0f, 1.0f, 1.0f, 1.0f, lightPosition.x, lightPosition.y, lightPosition.z, 0.0f);
 
 
     while (!mainWindow.getShouldClose()) {
+
+        /// CAMERA AND MOVEMENTS - PRE MUCH FIXED ////
         GLfloat now = glfwGetTime();
         deltaTime = now - lastTime;
         lastTime = now;
-
-
-        cubeRotationAngle += 50.0f * deltaTime;  // degrees per second
-        if (cubeRotationAngle > 360.0f) cubeRotationAngle -= 360.0f;
-
         glfwPollEvents();
-
         camera.keyControl(mainWindow.getsKeys(), deltaTime);
         camera.mouseControl(mainWindow.getXChange(), mainWindow.getYChange());
 
         glm::mat4 projection = glm::perspective(45.0f, (GLfloat) mainWindow.getBufferWidth() /
                                                        (GLfloat) mainWindow.getBufferHeight(), 0.1f, 100.f);
 
-        glClearColor(94.0f / 250.0f, 198.0f / 250.0f, 242.0f / 250.f,
-                     1.0f); // clear the window and set the color to red.
+        glClearColor(94.0f / 250.0f, 198.0f / 250.0f, 242.0f / 250.f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        /// /  / / / // / / / / / / // / / / / /////
 
+
+        static bool fWasPressed = false;
+
+        if (glfwGetKey(mainWindow.getWindow(), GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS &&
+            glfwGetKey(mainWindow.getWindow(), GLFW_KEY_F) == GLFW_PRESS)
+        {
+            if (!fWasPressed) {
+                wireframe = !wireframe;
+                glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+                std::cout << (wireframe ? "Wireframe ON\n" : "Wireframe OFF\n");
+                fWasPressed = true;
+            }
+        }
+        else {
+            fWasPressed = false;
+        }
+
+
+         //SHADERS  AND LIGHT
         shaderList[0].useShader();
-
         uniformModel = shaderList[0].getModelLocation();
         uniformProjection = shaderList[0].getProjectionLocation();
         uniformView = shaderList[0].getViewLocation();
@@ -332,53 +196,22 @@ int main() {
         uniformSpecularIntensity = shaderList[0].getSpecularIntensityLocation();
         uniformShininess = shaderList[0].getShininessLocation();
         uniformCameraPosition = shaderList[0].getCameraPosition();
-
-
         mainLight.useLight(uniformAmbientIntensity, uniformAmbientColour, uniformDiffuseIntensity, uniformDirection);
 
         glUniform3f(uniformCameraPosition, camera.getCameraPosition().x, camera.getCameraPosition().y, camera.getCameraPosition().z); // attaches to the camera pos in frag shader
 
+        // chunk shit test
+
         glm::mat4 model(1.0f);
-
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -4.5f));
-        model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.4f));
-
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera.calculateViewMatrix()));
 
-
-        shinyMaterial.useMaterial(uniformSpecularIntensity, uniformShininess);
-        brickTexture.useTexture();
-
-        pyramid->renderMesh();
-
-
-        model = glm::mat4 (1.0f);
-
-        model = glm::translate(model, glm::vec3(lightPosition));
-        model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
-        glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera.calculateViewMatrix()));
-        lightTexture.useTexture();
-
-        lightBlock->renderMesh();
-
-        for (int a = 0; a < numOfCubes; a++) {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[a]); // use stored position
-            model = glm::rotate(model, glm::radians(cubeRotationAngle), cubeRotationAxes[a]);
-
-            model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25f));
-
-            glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-            glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
-            glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera.calculateViewMatrix()));
-            dirtTexture.useTexture();
-            dullMaterial.useMaterial(uniformSpecularIntensity, uniformShininess);
-            meshList[a]->renderMesh();
-        }
+        dirtTexture.useTexture();
+        dullMaterial.useMaterial(uniformSpecularIntensity, uniformShininess);
+        chunk->generateChunk();
+        chunk->render();
 
 
         glUseProgram(0);

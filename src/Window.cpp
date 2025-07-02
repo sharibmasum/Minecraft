@@ -8,8 +8,8 @@
 
 
 Window::Window() {
-    width = 1920;
-    height = 1080;
+    width = 1280;
+    height = 720;
 
     for (size_t i=0; i<1024; i++) {
         keys[i] = 0;
@@ -97,10 +97,8 @@ void Window::handleKeys(GLFWwindow *window, int key, int code, int action, int m
     if (key >= 0 && key < 1024) {
         if(action == GLFW_PRESS) {
             theWindow -> keys[key] = true;
-            std::cout << "pressed: " << key << std::endl;
         } else if (action == GLFW_RELEASE){
             theWindow -> keys[key] = false;
-            std::cout << "released: " << key << std::endl;
         }
     }
  }
@@ -126,7 +124,12 @@ void Window::handleKeys(GLFWwindow *window, int key, int code, int action, int m
      glfwSetKeyCallback(mainWindow, handleKeys);
      glfwSetCursorPosCallback(mainWindow, handleMouse);
 
+ }
+
+GLFWwindow* Window::getWindow() {
+    return mainWindow;
 }
+
 Window::~Window() {
     glfwDestroyWindow(mainWindow);
     glfwTerminate();

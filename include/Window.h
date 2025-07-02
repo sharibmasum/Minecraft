@@ -44,6 +44,8 @@ public:
         glfwSwapBuffers(mainWindow);
     }
 
+    GLFWwindow* getWindow();
+
     ~Window();
 
 private:
