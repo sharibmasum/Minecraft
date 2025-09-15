@@ -20,6 +20,7 @@
 #include "Light.h"
 #include "Material.h"
 #include "Chunk.h"
+#include "Planet.h"
 
 
 
@@ -39,10 +40,11 @@ Texture dirtTexture;
 Material shinyMaterial;
 Material dullMaterial;
 
-Chunk* chunk = nullptr;
+Planet* planet = nullptr;
 
 Light mainLight;
 glm::vec3 lightPosition (-2.0f, 2.0f, -1.0f);
+glm::vec3 cameraPosition(1.0f, 1.0f, -1.0f);
 
 GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0, uniformAmbientIntensity = 0, uniformAmbientColour = 0, uniformDirection = 0, uniformDiffuseIntensity = 0, uniformCameraPosition = 0, uniformSpecularIntensity = 0, uniformShininess = 0;
 
@@ -116,7 +118,7 @@ void calcAverageNormals(unsigned int *indices, unsigned int indiceCount, GLfloat
 }
 
 void createObjects() {
-    chunk = new Chunk(16);
+    planet = new Planet(cameraPosition);
 }
 
 void createShader() {
@@ -126,6 +128,9 @@ void createShader() {
 }
 
 bool wireframe = false;
+float fpsTimer = 0.0f;
+int frameCount = 0;
+
 
 int main() {
 
@@ -136,7 +141,7 @@ int main() {
     createObjects();
     createShader();
 
-    camera = Camera(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 5.0f, 0.05f);
+    camera = Camera(cameraPosition, glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 15.0f, 0.05f);
 
     brickTexture = Texture("Textures/brick.png");
     brickTexture.loadTexture();
@@ -155,6 +160,18 @@ int main() {
         GLfloat now = glfwGetTime();
         deltaTime = now - lastTime;
         lastTime = now;
+
+
+        fpsTimer += deltaTime;
+        frameCount++;
+
+        if (fpsTimer >= 1.0f) {
+            std::cout << "FPS: " << frameCount << std::endl;
+            fpsTimer = 0.0f;
+            frameCount = 0;
+        }
+
+
         glfwPollEvents();
         camera.keyControl(mainWindow.getsKeys(), deltaTime);
         camera.mouseControl(mainWindow.getXChange(), mainWindow.getYChange());
@@ -207,11 +224,12 @@ int main() {
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
         glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera.calculateViewMatrix()));
-
         dirtTexture.useTexture();
+
         dullMaterial.useMaterial(uniformSpecularIntensity, uniformShininess);
-        chunk->generateChunk();
-        chunk->render();
+
+        planet->render(uniformModel);
+
 
 
         glUseProgram(0);

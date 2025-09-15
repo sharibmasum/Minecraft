@@ -32,6 +32,8 @@ set(SOURCES
         include/Material.h
         src/Chunk.cpp
         include/Chunk.h
+        src/Planet.cpp
+        include/Planet.h
 )
 
 # Executable target

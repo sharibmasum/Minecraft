@@ -5,99 +5,90 @@
 
 #include "Chunk.h"
 
-static const GLfloat rectVerticies [] = {
-            // mesh coords                      texture coords                 normals
-            // front
-            -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 0
-                    1.0f, -1.0f, -1.0f, 0.333333f, 0.0f, 0.0f, 0.0f, 0.0f, // 1
-                    -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 2
-                    1.0f, 1.0f, -1.0f, 0.333333f, 1.0f, 0.0f, 0.0f, 0.0f, // 3
 
-                    //back
-                    1.0f, -1.0f, 1.0f, 0.333333f, 0.0f, 0.0f, 0.0f, 0.0f, // 4
-                    1.0f, 1.0f, 1.0f, 0.333333f, 1.0f, 0.0f, 0.0f, 0.0f, // 5
-                    -1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 6
-                    -1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 7
-
-                    // right
-                    1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 8
-                    1.0f, -1.0f, 1.0f, 0.333333f, 0.0f, 0.0f, 0.0f, 0.0f, // 9
-                    1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 10
-                    1.0f, 1.0f, 1.0f, 0.333333f, 1.0f, 0.0f, 0.0f, 0.0f, // 11
-
-                    // left
-                    -1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, // 12
-                    -1.0f, -1.0f, 1.0f, 0.333333f, 0.0f, 0.0f, 0.0f, 0.0f, // 13
-                    -1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // 14
-                    -1.0f, 1.0f, 1.0f, 0.333333f, 1.0f, 0.0f, 0.0f, 0.0f,  // 15
-
-                    // bottom
-                    -1.0f, -1.0f, -1.0f, 0.33333f, 0.0f, 0.0f, 0.0f, 0.0f, // 16
-                    1.0f, -1.0f, -1.0f, 0.666666f, 0.0f, 0.0f, 0.0f, 0.0f, // 17
-                    1.0f, -1.0f, 1.0f, 0.666666f, 1.0f, 0.0f, 0.0f, 0.0f, // 18
-                    -1.0f, -1.0f, 1.0f, 0.333333, 1.0f, 0.0f, 0.0f, 0.0f, // 19
-
-                    // top
-                    -1.0f, 1.0f, -1.0f, 0.666666f, 0.0f, 0.0f, 0.0f, 0.0f, // 20
-                    1.0f, 1.0f, -1.0f, 1.0, 0.0f, 0.0f, 0.0f, 0.0f, // 21
-                    -1.0f, 1.0f, 1.0f, 0.666666f, 1.0f, 0.0f, 0.0f, 0.0f, // 22
-                    1.0f, 1.0f, 1.0f, 1.0, 1.0f, 0.0f, 0.0f, 0.0f // 23
-};
-static const unsigned int rectIndices[] = {
-        // face 1 - front
-        0, 2, 1,
-        1, 2, 3,
-
-        // face 2 - right
-        8, 10, 9,
-        10, 11, 9,
-
-        // face 3 - top
-        20, 22, 21,
-        22, 23, 21,
-
-        // face 4 - back
-        4, 5, 6,
-        6, 7, 4,
-
-        // face 5 - left
-        12, 13, 14,
-        14, 13, 15,
-
-        // face 6 - bottom
-        16, 17, 18,
-        18, 19, 16
+const glm::ivec3 directions[6] = {
+        {0,  0,  -1},
+        {1,  0,  0},
+        {0,  1,  0},
+        {0,  0,  1},
+        {-1, 0,  0},
+        {0,  -1, 0}
 };
 
+
+struct Face {
+    glm::vec3 positions[4];
+    glm::vec2 uvs[4];
+    glm::vec3 normal;
+};
+
+const float s = 0.5f; // scale for posiitoning
+
+static const Face cubeFaces[6] = {
+        // FRONT (-Z)
+        {
+                { { -s, -s, -s }, {  s, -s, -s }, { -s,  s, -s }, {  s,  s, -s } },
+                { { 0, 0 }, { 0.33333, 0 }, { 0, 1 }, { 0.33333, 1 } },
+                { 0, 0, -1 }
+        },
+        // RIGHT (+X)
+        {
+                { { s, -s, -s }, { s, -s,  s }, { s,  s, -s }, { s,  s,  s } },
+                { { 0, 0 }, { 0.33333, 0 }, { 0, 1 }, { 0.33333, 1 } },
+                { 1, 0, 0 }
+        },
+        // TOP (+Y)
+        {
+                { { -s, s, -s }, {  s, s, -s }, { -s, s,  s }, {  s, s,  s } },
+                { { 0.66666, 0 }, { 1, 0 }, { 0.66666, 1 }, { 1, 1 } },
+                { 0, 1, 0 }
+        },
+        // BACK (+Z)
+        {
+                { { s, -s, s }, { -s, -s, s }, { s,  s, s }, { -s,  s, s } },
+                { { 0, 0 }, { 0.33333, 0 }, { 0, 1 }, { 0.33333, 1 } },
+                { 0, 0, 1 }
+        },
+        // LEFT (-X)
+        {
+                { { -s, -s,  s }, { -s, -s, -s }, { -s,  s,  s }, { -s,  s, -s } },
+                { { 0, 0 }, { 0.3333, 0 }, { 0, 1 }, { 0.3333, 1 } },
+                { -1, 0, 0 }
+        },
+        // BOTTOM (-Y)
+        {
+                { { -s, -s,  s }, {  s, -s,  s }, { -s, -s, -s }, {  s, -s, -s } },
+                { { 0.333333, 0 }, { 0.6666666, 0 }, { 0.333333, 1 }, { 0.666666, 1 } },
+                { 0, -1, 0 }
+        }
+};
 
 Chunk::Chunk(unsigned int chunkSize) {
     this->chunkSize = chunkSize;
-    blocks.resize(chunkSize, std::vector<std::vector<bool>>(chunkSize, std::vector<bool>(chunkSize, false)));
 
+    blocks.resize(chunkSize,
+                  std::vector<std::vector<int>>(chunkSize,
+                                                std::vector<int>(chunkSize, 0)));  // 0 = air
 }
 
-void Chunk::generateChunk() { // determines where the chunk is generated, and where itll render a grass block
+
+void Chunk::generateChunk(std::vector<unsigned int>& data) { // determines where the chunk is generated, and where itll render a grass block
     auto start = std::chrono::high_resolution_clock::now();
+
+    int index = 0;
     for (unsigned int x = 0; x < chunkSize; ++x) {
         for (unsigned int y = 0; y < chunkSize; ++y) {
             for (unsigned int z = 0; z < chunkSize; ++z) {
-                if (y < chunkSize / 2) {
-                    blocks[x][y][z] = true; // grass
-                } else {
-                    blocks[x][y][z] = false; // air
-                }
+                blocks[x][y][z] = data[index++];
             }
         }
     }
-
-    buildMesh();
-
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "Chunk creation: " << duration << "[ms]" << std::endl;
+   // std::cout << "Chunk creation: " << duration << "[ms]" << std::endl;
 }
 
-void Chunk::buildMesh() {
+void Chunk::buildMeshWithNeighbors(Chunk* neighbors[6]) {
     std::vector<GLfloat> vertices;
     std::vector<unsigned int> indices;
     unsigned int vertexOffset = 0;
@@ -106,50 +97,99 @@ void Chunk::buildMesh() {
         for (unsigned int y = 0; y < chunkSize; y++) {
             for (unsigned int z = 0; z < chunkSize; z++) {
                 if (blocks[x][y][z]) {
-                    addCube(vertices, indices, x, y, z, vertexOffset);
+                    addCube(vertices, indices, x, y, z, vertexOffset, neighbors);
                 }
             }
         }
     }
 
-    mesh.createMesh(vertices.data(), indices.data(), vertices.size(), indices.size() );
+    mesh.createMesh(vertices.data(), indices.data(), vertices.size(), indices.size());
 }
 
-
-
-void Chunk::addCube(std::vector<GLfloat> &vertices,
-                    std::vector<unsigned int> &indices,
-                     int x, int y, int z,
-                    unsigned int &vertexOffset)
+void Chunk::addCubeFace(int faceIndex, int x, int y, int z,
+                        std::vector<GLfloat>& vertices,
+                        std::vector<unsigned int>& indices,
+                        unsigned int& vertexOffset)
 {
-    // Copy all 24 vertices
-    for (int i = 0; i < 24; i++) {
-        GLfloat px = rectVerticies[i * 8 + 0] * 0.5f + x + 0.5f;
-        GLfloat py = rectVerticies[i * 8 + 1] * 0.5f + y + 0.5f;
-        GLfloat pz = rectVerticies[i * 8 + 2] * 0.5f + z + 0.5f;
+    const Face& face = cubeFaces[faceIndex];
 
-        GLfloat u  = rectVerticies[i * 8 + 3];
-        GLfloat v  = rectVerticies[i * 8 + 4];
+    for (int i = 0; i < 4; i++) {
+        glm::vec3 pos = face.positions[i] + glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f);
+        glm::vec2 uv  = face.uvs[i];
+        glm::vec3 n   = face.normal;
 
-        GLfloat nx = rectVerticies[i * 8 + 5];
-        GLfloat ny = rectVerticies[i * 8 + 6];
-        GLfloat nz = rectVerticies[i * 8 + 7];
-
-        vertices.insert(vertices.end(), { px, py, pz, u, v, nx, ny, nz });
+        vertices.insert(vertices.end(), {
+                pos.x, pos.y, pos.z,
+                uv.x, uv.y,
+                n.x, n.y, n.z
+        });
     }
 
-    // Add indices with offset
-    for (int i = 0; i < 36; i++) {
-        indices.push_back(rectIndices[i] + vertexOffset);
-    }
+    indices.insert(indices.end(), {
+            vertexOffset + 0,
+            vertexOffset + 2,
+            vertexOffset + 3,
+            vertexOffset + 3,
+            vertexOffset + 1,
+            vertexOffset + 0
+    });
 
-    vertexOffset += 24;
+    vertexOffset += 4;
+}
+
+void Chunk::addCube(std::vector<GLfloat>& vertices,
+                    std::vector<unsigned int>& indices,
+                    int x, int y, int z,
+                    unsigned int& vertexOffset,
+                    Chunk* neighbors[6])
+{
+    for (int face = 0; face < 6; face++) {
+        int nx = x + directions[face].x;
+        int ny = y + directions[face].y;
+        int nz = z + directions[face].z;
+
+        bool neighborFilled = false;
+
+        // Local block neighbor
+        if (nx >= 0 && nx < chunkSize &&
+            ny >= 0 && ny < chunkSize &&
+            nz >= 0 && nz < chunkSize) {
+            neighborFilled = blocks[nx][ny][nz];
+        } else {
+            // Out-of-bounds, check neighbor chunk
+            Chunk* neighbor = neighbors[face];
+            if (neighbor) {
+                int tx = nx;
+                int ty = ny;
+                int tz = nz;
+
+                if (tx < 0) tx = chunkSize - 1;
+                if (tx >= chunkSize) tx = 0;
+
+                if (ty < 0) ty = chunkSize - 1;
+                if (ty >= chunkSize) ty = 0;
+
+                if (tz < 0) tz = chunkSize - 1;
+                if (tz >= chunkSize) tz = 0;
+
+                if (tx >= 0 && tx < chunkSize &&
+                    ty >= 0 && ty < chunkSize &&
+                    tz >= 0 && tz < chunkSize) {
+                    neighborFilled = neighbor->blocks[tx][ty][tz];
+                }
+            }
+        }
+
+        if (!neighborFilled) {
+            addCubeFace(face, x, y, z, vertices, indices, vertexOffset);
+        }
+    }
 }
 
 void Chunk::render() {
     mesh.renderMesh();
 }
 
-Chunk::~Chunk(){
+Chunk::~Chunk() {
     mesh.clearMesh();
 }
