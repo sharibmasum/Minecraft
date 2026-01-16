@@ -34,7 +34,7 @@ brew install glfw glm pkg-config
 
 2. Clone the repository:
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/sharibmasum/minecraft
 cd Minecraft
 ```
 
